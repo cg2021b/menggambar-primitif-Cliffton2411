@@ -14,41 +14,38 @@ var vertices = [
    0.75,-0.5,0.0
 ];
 
+var colors = [0,0,1, 1,0,0, 0,1,0, 1,0,1, 1,1,1];
+
 indices = [3,2,1,3,1,0,3,2,4];
 
-// Create an empty buffer object to store vertex buffer
+// Create an empty buffer object and store vertex data
 var vertex_buffer = gl.createBuffer();
-
-// Bind appropriate array buffer to it
 gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
-
-// Pass the vertex data to the buffer
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-// Unbind the buffer
 gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-// Create an empty buffer object to store Index buffer
+// Create an empty buffer object and store Index data
 var Index_Buffer = gl.createBuffer();
-
-// Bind appropriate array buffer to it
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Index_Buffer);
-
-// Pass the vertex data to the buffer
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-
-// Unbind the buffer
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-/*====================== Shaders =======================*/
+// Create an empty buffer object and store color data
+var color_buffer = gl.createBuffer ();
+gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-// Vertex shader source code
-var vertCode =
-   'attribute vec3 coordinates;' +
+/*======================= Shaders =======================*/
+
+// vertex shader source code
+var vertCode = 'attribute vec3 coordinates;'+
+   'attribute vec3 color;'+
+   'varying vec3 vColor;'+
    'void main(void) {' +
       ' gl_Position = vec4(coordinates, 1.0);' +
+      'vColor = color;'+
    '}';
-
+   
 // Create a vertex shader object
 var vertShader = gl.createShader(gl.VERTEX_SHADER);
 
@@ -58,13 +55,15 @@ gl.shaderSource(vertShader, vertCode);
 // Compile the vertex shader
 gl.compileShader(vertShader);
 
-// Fragment shader source code
-var fragCode =
-   'void main(void) {' +
-      ' gl_FragColor = vec4(0.0, 1.0, 0.0, 0.5);' +
-   '}';
 
-// Create fragment shader object 
+// fragment shader source code
+var fragCode = 'precision mediump float;'+
+   'varying vec3 vColor;'+
+   'void main(void) {'+
+      'gl_FragColor = vec4(vColor, 1.);'+
+   '}';
+   
+// Create fragment shader object
 var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
 
 // Attach fragment shader source code
@@ -89,24 +88,36 @@ gl.linkProgram(shaderProgram);
 // Use the combined shader program object
 gl.useProgram(shaderProgram);
 
-/* ======= Associating shaders to buffer objects =======*/
+/* ======== Associating shaders to buffer objects =======*/
 
 // Bind vertex buffer object
 gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
 
 // Bind index buffer object
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Index_Buffer); 
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Index_Buffer);
 
 // Get the attribute location
 var coord = gl.getAttribLocation(shaderProgram, "coordinates");
 
-// Point an attribute to the currently bound VBO
+// point an attribute to the currently bound VBO
 gl.vertexAttribPointer(coord, 3, gl.FLOAT, false, 0, 0);
 
 // Enable the attribute
 gl.enableVertexAttribArray(coord);
 
-/*============= Drawing the Quad ================*/
+// bind the color buffer
+gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+
+// get the attribute location
+var color = gl.getAttribLocation(shaderProgram, "color");
+
+// point attribute to the volor buffer object
+gl.vertexAttribPointer(color, 3, gl.FLOAT, false,0,0) ;
+
+// enable the color attribute
+gl.enableVertexAttribArray(color);
+
+/*============Drawing the Quad====================*/
 
 // Clear the canvas
 gl.clearColor(0.0, 0.0, 0.0, 0.9);
@@ -120,6 +131,6 @@ gl.clear(gl.COLOR_BUFFER_BIT);
 // Set the view port
 gl.viewport(0,0,canvas.width,canvas.height);
 
-// Draw the triangle
+//Draw the triangle
 gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT,0);
 }
